@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TakeHome — India's CTC to In-Hand Salary Calculator</title>
+<meta name="description" content="Turn any CTC offer into a real monthly in-hand salary. New vs old tax regime (FY 2025-26), full payslip breakdown, and a side-by-side offer comparison. No signup, everything stays on your device.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#faf6ee; --paper2:#f3ecdd; --card:#fffdf7; --ink:#241a12; --ink2:#5c4a38;
+  --muted:#8a7663; --line:#e5d9c3; --bronze:#b7791f; --bronze2:#d9a441; --amber:#e8b64c;
+  --terra:#c05b2e; --terra-soft:#f6e3d3; --green:#3f7a4e; --green-soft:#e2efe4;
+  --red:#a83a2a; --red-soft:#f8e4de; --gold-grad:linear-gradient(135deg,#d9a441,#b7791f 55%,#8a5a12);
+  --shadow:0 18px 44px -18px rgba(60,38,12,.28); --r:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.serif{font-family:Fraunces,Georgia,serif}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+img{display:block;max-width:100%}
+a{color:var(--bronze)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* ---------- Cinematic intro ---------- */
+#intro{position:fixed;inset:0;z-index:200;background:#1c130b;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f7ead0;transition:opacity .6s ease,visibility .6s;overflow:hidden}
+#intro.done{opacity:0;visibility:hidden;pointer-events:none}
+#intro .intro-bg{position:absolute;inset:0;background:radial-gradient(60% 50% at 50% 38%,rgba(217,164,65,.28),transparent 70%),radial-gradient(40% 35% at 80% 80%,rgba(192,91,46,.22),transparent 70%);animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+#intro .coin{width:104px;height:104px;border-radius:50%;background:var(--gold-grad);display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:54px;font-weight:900;color:#2a1c07;box-shadow:0 0 0 8px rgba(217,164,65,.18),0 0 60px rgba(217,164,65,.55);animation:coinIn 1s cubic-bezier(.2,1.4,.4,1) both,coinSpin 5s ease-in-out 1.2s infinite;position:relative;z-index:2}
+@keyframes coinIn{from{transform:scale(.2) rotate(-140deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes coinSpin{0%,100%{transform:rotateY(0)}50%{transform:rotateY(24deg)}}
+#intro h1{font-size:clamp(44px,9vw,84px);font-weight:900;letter-spacing:-.02em;margin-top:26px;position:relative;z-index:2}
+#intro h1 span{display:inline-block;opacity:0;animation:rise .7s cubic-bezier(.2,.9,.3,1) forwards}
+@keyframes rise{from{transform:translateY(26px);opacity:0}to{transform:translateY(0);opacity:1}}
+#intro .tag{font-size:15px;letter-spacing:.28em;text-transform:uppercase;color:#d9b06a;margin-top:10px;opacity:0;animation:fadeUp .8s ease 1s forwards;position:relative;z-index:2}
+@keyframes fadeUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+#intro .bar{width:min(280px,70vw);height:4px;background:rgba(255,255,255,.16);border-radius:99px;margin-top:34px;overflow:hidden;position:relative;z-index:2}
+#intro .bar i{display:block;height:100%;width:0;background:var(--gold-grad);border-radius:99px;animation:load 3.4s ease forwards}
+@keyframes load{to{width:100%}}
+#intro .skip{position:absolute;bottom:26px;right:28px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#f7ead0;padding:9px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:3}
+#intro .skip:hover{background:rgba(255,255,255,.2)}
+
+/* ---------- Header ---------- */
+header{position:sticky;top:0;z-index:60;background:rgba(250,246,238,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.head-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
+.logo .mark{width:42px;height:42px;border-radius:12px;background:var(--gold-grad);display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-weight:900;font-size:22px;color:#2a1c07;box-shadow:0 6px 16px -6px rgba(183,121,31,.6)}
+.logo b{font-family:Fraunces,serif;font-size:23px;letter-spacing:-.01em}
+.logo small{display:block;font-family:Inter;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:600}
+nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+nav a{padding:8px 13px;border-radius:99px;text-decoration:none;color:var(--ink2);font-size:13.5px;font-weight:600}
+nav a:hover{background:var(--paper2);color:var(--ink)}
+nav a.hot{background:var(--ink);color:#f7ead0}
+.fy-badge{font-size:11.5px;font-weight:700;background:var(--green-soft);color:var(--green);border:1px solid #c4dcc8;padding:6px 11px;border-radius:99px;white-space:nowrap}
+
+/* ---------- Hero ---------- */
+.hero{max-width:1180px;margin:0 auto;padding:34px 20px 8px}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:stretch}
+.hero-copy h1{font-size:clamp(38px,5.4vw,62px);line-height:1.02;letter-spacing:-.02em;font-weight:900}
+.hero-copy h1 em{font-style:italic;color:var(--bronze)}
+.hero-copy p.lede{font-size:17px;color:var(--ink2);margin:16px 0 20px;max-width:56ch}
+.hero-copy p.lede b{color:var(--ink)}
+.chip-row{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:20px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--ink2);display:flex;gap:7px;align-items:center}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(63,122,78,.18)}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn{border:none;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:700;transition:transform .15s ease,box-shadow .15s ease}
+.btn:active{transform:scale(.97)}
+.btn-gold{background:var(--gold-grad);color:#2a1c07;box-shadow:0 10px 24px -10px rgba(183,121,31,.7)}
+.btn-gold:hover{transform:translateY(-2px)}
+.btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--bronze)}
+.hero-photo{position:relative;border-radius:22px;overflow:hidden;min-height:300px;box-shadow:var(--shadow)}
+.hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kenburns 26s ease-in-out infinite alternate}
+@keyframes kenburns{from{transform:scale(1) translate(0,0)}to{transform:scale(1.14) translate(-1.5%,1.5%)}}
+.hero-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(28,19,11,.72))}
+.hero-photo .cap{position:absolute;left:18px;right:18px;bottom:16px;color:#fdf6e7;z-index:2}
+.hero-photo .cap b{font-family:Fraunces,serif;font-size:20px;display:block}
+.hero-photo .cap span{font-size:13px;opacity:.92}
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:26px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.stat b{font-family:Fraunces,serif;font-size:23px;display:block;letter-spacing:-.01em}
+.stat span{font-size:12.5px;color:var(--muted);font-weight:600}
+
+/* ---------- Desk layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:26px 20px 60px}
+.section-label{font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--bronze);font-weight:800;margin:34px 0 6px}
+.section-title{font-size:30px;font-weight:900;letter-spacing:-.01em;margin-bottom:4px}
+.section-sub{color:var(--ink2);font-size:15px;margin-bottom:20px;max-width:70ch}
+.desk{display:grid;grid-template-columns:380px 1fr;gap:22px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px}
+.panel.sticky{position:sticky;top:86px}
+.panel h3{font-size:21px;font-weight:700;margin-bottom:2px}
+.panel .hint{font-size:13px;color:var(--muted);margin-bottom:16px}
+.field{margin-bottom:16px}
+.field label{display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;margin-bottom:7px}
+.field label output{color:var(--bronze);font-weight:800}
+.field .sub{font-size:12px;color:var(--muted);font-weight:500;margin-top:5px}
+input[type=number],input[type=text],select{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:15px;background:#fff;color:var(--ink)}
+input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--bronze);outline:none;box-shadow:0 0 0 3px rgba(217,164,65,.25)}
+input[type=range]{width:100%;accent-color:var(--bronze);height:28px}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.preset{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:7px 13px;font-size:13px;font-weight:700;color:var(--ink2)}
+.preset:hover{border-color:var(--bronze);color:var(--bronze)}
+.preset.on{background:var(--ink);color:#f7ead0;border-color:var(--ink)}
+.seg{display:flex;background:var(--paper2);border:1px solid var(--line);border-radius:11px;padding:4px;gap:4px}
+.seg button{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:8px;font-size:13.5px;font-weight:700;color:var(--ink2)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(60,38,12,.15)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+details.adv{border-top:1px dashed var(--line);padding-top:14px;margin-top:4px}
+details.adv summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--bronze);list-style:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::after{content:"  +"}
+details.adv[open ] summary::after{content:"  −"}
+details.adv .adv-body{padding-top:14px}
+.reset-link{background:none;border:none;color:var(--muted);font-size:12.5px;font-weight:600;text-decoration:underline;margin-top:6px}
+
+/* Payslip */
+.payslip{background:#fffdf7;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.payslip-head{background:var(--ink);color:#f7ead0;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.payslip-head .co{font-family:Fraunces,serif;font-size:20px;font-weight:700}
+.payslip-head .co small{display:block;font-family:Inter;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#d9b06a;font-weight:600}
+.stamp{border:2px solid var(--amber);color:var(--amber);border-radius:8px;padding:7px 13px;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;transform:rotate(-3deg)}
+.payslip-body{padding:22px 24px}
+.big-numbers{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:6px}
+.big{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.big span{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.big b{font-family:Fraunces,serif;font-size:clamp(26px,3.4vw,36px);display:block;letter-spacing:-.01em;margin-top:2px}
+.big small{font-size:12.5px;color:var(--ink2)}
+.big.hero-big{background:linear-gradient(135deg,#fdf3d7,#f6e3b8);border-color:#e3c98a}
+.big.hero-big b{color:#7a5200}
+.keep-line{font-size:14px;color:var(--ink2);background:var(--green-soft);border:1px solid #c4dcc8;border-radius:11px;padding:11px 14px;margin:10px 0 18px}
+.keep-line b{color:var(--green)}
+.slip-table{width:100%;border-collapse:collapse;font-size:14.5px}
+.slip-table caption{text-align:left;font-family:Fraunces,serif;font-size:17px;font-weight:700;padding:6px 0 10px}
+.slip-table th{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 4px;border-bottom:2px solid var(--line)}
+.slip-table th:last-child,.slip-table td:last-child{text-align:right}
+.slip-table td{padding:8px 4px;border-bottom:1px solid #f0e7d6}
+.slip-table td.note{color:var(--muted);font-size:12.5px}
+.slip-table tr.total td{font-weight:800;border-bottom:none;border-top:2px solid var(--ink);padding-top:11px;font-size:15.5px}
+.slip-table tr.net td{font-weight:800;font-size:17px;color:var(--green);border-bottom:none}
+.perf{height:12px;background:repeating-linear-gradient(90deg,var(--paper2) 0 10px,transparent 10px 20px);border-top:1px dashed var(--line)}
+.copy-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.copy-row .btn{padding:11px 18px;font-size:13.5px}
+
+/* Donut + regime */
+.split2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px}
+.card h3{font-size:20px;font-weight:700}
+.card .hint{font-size:13px;color:var(--muted);margin:4px 0 14px}
+.donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.donut-wrap svg{flex:none}
+.legend{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.legend .li{display:flex;align-items:center;gap:9px}
+.legend .sw{width:12px;height:12px;border-radius:4px;flex:none}
+.legend b{margin-left:auto;font-weight:700;padding-left:18px}
+.regime{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.reg{border:1.5px solid var(--line);border-radius:14px;padding:16px}
+.reg.win{border-color:var(--green);background:var(--green-soft)}
+.reg .tag{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.reg.win .tag{color:var(--green)}
+.reg b{font-family:Fraunces,serif;font-size:24px;display:block;margin:4px 0 2px}
+.reg p{font-size:13px;color:var(--ink2)}
+.reg .save{font-size:13px;font-weight:700;color:var(--green);margin-top:8px}
+.verdict{margin-top:14px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:14px}
+.verdict b{color:var(--bronze)}
+
+/* Offers */
+.offer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.offer{border:1.5px solid var(--line);border-radius:16px;padding:18px;background:var(--card);position:relative}
+.offer.best{border-color:var(--bronze);box-shadow:0 0 0 3px rgba(217,164,65,.22)}
+.offer .best-tag{position:absolute;top:-11px;right:14px;background:var(--gold-grad);color:#2a1c07;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:99px}
+.offer h4{font-family:Fraunces,serif;font-size:19px;margin-bottom:2px;padding-right:70px}
+.offer .meta{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.offer .row{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px solid #f0e7d6}
+.offer .row b{font-weight:700}
+.offer .row.net b{color:var(--green);font-size:16px}
+.offer .del{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);font-size:17px;line-height:1;padding:4px}
+.offer .del:hover{color:var(--red)}
+.offer-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
+.offer-form .f{flex:1;min-width:150px}
+.offer-form label{display:block;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.empty-offer{border:1.5px dashed var(--line);border-radius:16px;padding:26px;text-align:center;color:var(--muted);font-size:14px;grid-column:1/-1}
+
+/* Reverse calc */
+.rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+.rev-result{background:var(--ink);color:#f7ead0;border-radius:var(--r);padding:24px;display:flex;flex-direction:column;justify-content:center}
+.rev-result span{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#d9b06a;font-weight:700}
+.rev-result b{font-family:Fraunces,serif;font-size:clamp(30px,4vw,44px);display:block;margin:6px 0}
+.rev-result p{font-size:14px;color:#e8dcc4}
+.rev-result p b{font-family:Inter;font-size:14px;color:#fff}
+
+/* Guide */
+.guide-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
+.slab-table{width:100%;border-collapse:collapse;font-size:14px}
+.slab-table th{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:2px solid var(--line)}
+.slab-table td{padding:8px 6px;border-bottom:1px solid #f0e7d6}
+.slab-table td:last-child,.slab-table th:last-child{text-align:right}
+.tip{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid #f0e7d6}
+.tip:last-child{border-bottom:none}
+.tip .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--terra-soft);color:var(--terra);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.tip b{display:block;font-size:14.5px}
+.tip p{font-size:13.5px;color:var(--ink2)}
+
+/* Photo band */
+.band{margin-top:36px;border-radius:22px;overflow:hidden;position:relative;min-height:230px;box-shadow:var(--shadow)}
+.band img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kenburns 30s ease-in-out infinite alternate}
+.band::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(28,19,11,.78) 0%,rgba(28,19,11,.35) 55%,transparent)}
+.band .in{position:relative;z-index:2;padding:34px;color:#fdf6e7;max-width:560px}
+.band .in h3{font-size:28px;font-weight:900;line-height:1.15}
+.band .in p{font-size:14.5px;margin-top:8px;color:#f0e4cd}
+
+footer{border-top:1px solid var(--line);padding:26px 20px 40px;text-align:center;color:var(--muted);font-size:13px}
+footer b{color:var(--ink2)}
+
+/* Onboarding coach */
+#coach{position:fixed;inset:0;z-index:150;background:rgba(28,19,11,.55);display:none;align-items:flex-end;justify-content:center;padding:20px}
+#coach.show{display:flex}
+.coach-card{background:var(--card);border-radius:20px;max-width:520px;width:100%;padding:26px;box-shadow:0 30px 70px -20px rgba(0,0,0,.5);animation:pop .35s cubic-bezier(.2,1.3,.4,1)}
+@keyframes pop{from{transform:translateY(24px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.coach-card .step{font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--bronze)}
+.coach-card h3{font-size:24px;margin:6px 0 8px}
+.coach-card p{font-size:14.5px;color:var(--ink2)}
+.coach-dots{display:flex;gap:6px;margin:16px 0}
+.coach-dots i{width:26px;height:5px;border-radius:99px;background:var(--line)}
+.coach-dots i.on{background:var(--bronze)}
+.coach-btns{display:flex;gap:10px;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:var(--ink);color:#f7ead0;padding:12px 20px;border-radius:99px;font-size:14px;font-weight:600;z-index:180;opacity:0;transition:all .35s ease;pointer-events:none;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.toast.show{transform:translate(-50%,0);opacity:1}
+
+@media (max-width:920px){
+  .hero-grid,.desk,.split2,.guide-grid,.rev-grid{grid-template-columns:1fr}
+  .panel.sticky{position:static}
+  .stat-strip{grid-template-columns:repeat(2,1fr)}
+  .offer-grid{grid-template-columns:1fr}
+  nav{display:none}
+  .big-numbers{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- Cinematic intro -->
+<div id="intro" role="dialog" aria-label="Welcome">
+  <div class="intro-bg"></div>
+  <div class="coin">&#8377;</div>
+  <h1 aria-label="TakeHome"><span>T</span><span>a</span><span>k</span><span>e</span><span>H</span><span>o</span><span>m</span><span>e</span></h1>
+  <div class="tag">CTC &rarr; In-hand &middot; India</div>
+  <div class="bar"><i></i></div>
+  <button class="skip" id="skipIntro" type="button">Skip intro &rsaquo;</button>
+</div>
+
+<header>
+  <div class="head-in">
+    <a class="logo" href="#top"><span class="mark">&#8377;</span><span><b>TakeHome</b><small>CTC &rarr; In-hand</small></span></a>
+    <nav>
+      <a href="#calc">Calculator</a>
+      <a href="#compare">Compare</a>
+      <a href="#offers">Offers</a>
+      <a href="#reverse">Reverse</a>
+      <a href="#guide">Guide</a>
+    </nav>
+    <span class="fy-badge">FY 2025&ndash;26 &middot; New regime default</span>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <h1>Your offer says <em>&#8377;12 lakh.</em><br>What lands in your bank?</h1>
+      <p class="lede">Paste in any CTC and see the <b>real monthly in-hand</b> — after EPF, professional tax and income tax under both tax regimes. Save offers, compare them side by side, and work backwards from the salary you actually want.</p>
+      <div class="chip-row">
+        <span class="chip"><span class="dot"></span>Live FY 2025&ndash;26 slabs</span>
+        <span class="chip">Zero tax up to &#8377;12.75 lakh salary</span>
+        <span class="chip">No signup &middot; data stays on your device</span>
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-gold" type="button" onclick="document.getElementById('calc').scrollIntoView({behavior:'smooth'})">Calculate my in-hand &darr;</button>
+        <button class="btn btn-ghost" type="button" onclick="document.getElementById('guide').scrollIntoView({behavior:'smooth'})">How CTC works</button>
+      </div>
+    </div>
+    <div class="hero-photo">
+      <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=70" alt="A calculator and notebook on a desk while planning finances" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22800%22><rect width=%221200%22 height=%22800%22 fill=%22%23d9a441%22/></svg>'">
+      <div class="cap"><b>One number, honestly decoded.</b><span>CTC is a headline. Your payslip is the truth.</span></div>
+    </div>
+  </div>
+  <div class="stat-strip">
+    <div class="stat"><b>&#8377;12.75 L</b><span>Salary with zero income tax (new regime, after &#8377;75,000 standard deduction)</span></div>
+    <div class="stat"><b>12% of Basic</b><span>Your EPF share — locked away for your future self</span></div>
+    <div class="stat"><b>4.81% of Basic</b><span>Gratuity — paid by the employer, part of your CTC</span></div>
+    <div class="stat"><b>30%</b><span>Top slab now starts only above &#8377;24 lakh (new regime)</span></div>
+  </div>
+</section>
+
+<div class="wrap" id="calc">
+  <p class="section-label">The calculator</p>
+  <h2 class="section-title">Build your CTC, read your payslip</h2>
+  <p class="section-sub">Change any number and the payslip updates instantly. Defaults match how most Indian IT offers are structured — adjust them to your actual offer letter.</p>
+
+  <div class="desk">
+    <!-- Controls -->
+    <div class="panel sticky">
+      <h3>Your offer</h3>
+      <p class="hint">Everything is saved on this device, so your numbers are here when you come back.</p>
+
+      <div class="field">
+        <label for="ctcInput">Annual CTC <output id="ctcOut">&#8377;12,00,000</output></label>
+        <input type="number" id="ctcInput" min="100000" max="100000000" step="10000" value="1200000" inputmode="numeric" aria-describedby="ctcHelp">
+        <input type="range" id="ctcSlider" min="100000" max="5000000" step="10000" value="1200000" aria-label="CTC slider">
+        <div class="preset-row" id="ctcPresets">
+          <button type="button" class="preset" data-ctc="500000">&#8377;5 L</button>
+          <button type="button" class="preset" data-ctc="900000">&#8377;9 L</button>
+          <button type="button" class="preset on" data-ctc="1200000">&#8377;12 L</button>
+          <button type="button" class="preset" data-ctc="1500000">&#8377;15 L</button>
+          <button type="button" class="preset" data-ctc="2000000">&#8377;20 L</button>
+          <button type="button" class="preset" data-ctc="3000000">&#8377;30 L</button>
+        </div>
+        <p class="sub" id="ctcHelp">Cost to Company — the full headline number in your offer letter.</p>
+      </div>
+
+      <div class="field">
+        <label for="basicPct">Basic pay <output id="basicOut">40% of CTC</output></label>
+        <input type="range" id="basicPct" min="30" max="60" step="1" value="40">
+        <p class="sub">Basic decides your EPF and gratuity. Most offers keep it at 40&ndash;50% of CTC.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="hraPct">HRA <output id="hraOut">50% of Basic</output></label>
+          <input type="range" id="hraPct" min="0" max="60" step="5" value="50">
+        </div>
+        <div class="field">
+          <label for="varPct">Variable pay <output id="varOut">10% of CTC</output></label>
+          <input type="range" id="varPct" min="0" max="40" step="5" value="10">
+          <p class="sub">Bonus / variable, paid later in the year.</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>City type</label>
+        <div class="seg" id="citySeg">
+          <button type="button" data-city="metro" class="on">Metro (Delhi, Mumbai, Chennai, Kolkata)</button>
+          <button type="button" data-city="nonmetro">Non-metro</button>
+        </div>
+        <p class="sub">Matters only for the old regime — HRA exemption is 50% of Basic in metros, 40% elsewhere.</p>
+      </div>
+
+      <div class="field">
+        <label for="rentInput">Monthly rent you pay <output id="rentOut">&#8377;15,000</output></label>
+        <input type="range" id="rentInput" min="0" max="100000" step="1000" value="15000">
+        <p class="sub">Used only for the old regime's HRA exemption. Set to 0 if you pay no rent.</p>
+      </div>
+
+      <details class="adv">
+        <summary>Old-regime deductions &amp; professional tax</summary>
+        <div class="adv-body">
+          <div class="two-col">
+            <div class="field">
+              <label for="c80">Section 80C</label>
+              <input type="number" id="c80" min="0" max="150000" step="5000" value="150000">
+              <p class="sub">EPF, PPF, ELSS, LIC — capped at &#8377;1.5 lakh.</p>
+            </div>
+            <div class="field">
+              <label for="c80d">Section 80D</label>
+              <input type="number" id="c80d" min="0" max="100000" step="5000" value="25000">
+              <p class="sub">Health insurance premium.</p>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="homeLoan">Home-loan interest</label>
+              <input type="number" id="homeLoan" min="0" max="200000" step="10000" value="0">
+              <p class="sub">Old regime only, capped at &#8377;2 lakh.</p>
+            </div>
+            <div class="field">
+              <label for="ptInput">Professional tax / month</label>
+              <input type="number" id="ptInput" min="0" max="500" step="50" value="200">
+              <p class="sub">Karnataka &#8377;200, Maharashtra &#8377;300, Delhi &#8377;0.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+      <button class="reset-link" type="button" id="resetBtn">Reset to typical offer defaults</button>
+    </div>
+
+    <!-- Payslip -->
+    <div>
+      <div class="payslip">
+        <div class="payslip-head">
+          <div class="co">Your payslip<small>TakeHome &middot; FY 2025&ndash;26 &middot; New regime</small></div>
+          <div class="stamp">Net pay</div>
+        </div>
+        <div class="payslip-body">
+          <div class="big-numbers">
+            <div class="big hero-big">
+              <span>Monthly in-hand</span>
+              <b id="monthlyInhand">&#8377;0</b>
+              <small id="monthlyNote">Fixed monthly pay, before variable bonus</small>
+            </div>
+            <div class="big">
+              <span>Annual in-hand</span>
+              <b id="annualInhand">&#8377;0</b>
+              <small id="annualNote">Including variable pay, after all deductions</small>
+            </div>
+          </div>
+          <p class="keep-line" id="keepLine"></p>
+
+          <table class="slip-table" aria-label="Monthly earnings">
+            <caption>Earnings — every month</caption>
+            <thead><tr><th>Component</th><th>Monthly</th></tr></thead>
+            <tbody id="earnRows"></tbody>
+          </table>
+          <div class="perf" aria-hidden="true"></div>
+          <table class="slip-table" aria-label="Monthly deductions">
+            <caption>Deductions — every month</caption>
+            <thead><tr><th>Component</th><th>Monthly</th></tr></thead>
+            <tbody id="dedRows"></tbody>
+          </table>
+          <div class="copy-row">
+            <button class="btn btn-gold" type="button" id="copyBtn">Copy summary</button>
+            <button class="btn btn-ghost" type="button" id="saveOfferBtn">Save this as an offer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="split2">
+        <div class="card">
+          <h3>Where your CTC goes</h3>
+          <p class="hint">Every rupee of your annual CTC, split by destination.</p>
+          <div class="donut-wrap">
+            <svg id="donut" width="170" height="170" viewBox="0 0 170 170" role="img" aria-label="CTC split chart"></svg>
+            <div class="legend" id="donutLegend"></div>
+          </div>
+        </div>
+        <div class="card" id="compare">
+          <h3>New regime vs old regime</h3>
+          <p class="hint">Same salary, two tax rules. The winner is worked out from your numbers above.</p>
+          <div class="regime">
+            <div class="reg" id="regNew">
+              <span class="tag">New regime &middot; default</span>
+              <b id="newTax">&#8377;0</b>
+              <p id="newNote">Tax per year</p>
+              <p class="save" id="newSave"></p>
+            </div>
+            <div class="reg" id="regOld">
+              <span class="tag">Old regime &middot; with deductions</span>
+              <b id="oldTax">&#8377;0</b>
+              <p id="oldNote">Tax per year</p>
+              <p class="save" id="oldSave"></p>
+            </div>
+          </div>
+          <p class="verdict" id="verdict"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="offers" style="padding-top:0">
+  <p class="section-label">Offer vault</p>
+  <h2 class="section-title">Compare up to 3 offers, side by side</h2>
+  <p class="section-sub">A &#8377;12 lakh offer with 20% variable pay is not the same as a &#8377;11 lakh offer with none. Save each offer with its real structure and let the in-hand number decide.</p>
+
+  <div class="offer-form">
+    <div class="f">
+      <label for="offerName">Offer name</label>
+      <input type="text" id="offerName" placeholder="e.g. Teal India — Full Stack" maxlength="48">
+    </div>
+    <div class="f">
+      <label for="offerCtc">Annual CTC (&#8377;)</label>
+      <input type="number" id="offerCtc" min="100000" max="100000000" step="10000" placeholder="1200000">
+    </div>
+    <div class="f">
+      <label for="offerVar">Variable % of CTC</label>
+      <input type="number" id="offerVar" min="0" max="40" step="5" placeholder="10">
+    </div>
+    <button class="btn btn-gold" type="button" id="addOfferBtn">Add offer</button>
+  </div>
+  <div class="offer-grid" id="offerGrid">
+    <div class="empty-offer" id="offerEmpty">No offers saved yet. Add your first offer above — or press “Save this as an offer” on the payslip.</div>
+  </div>
+</div>
+
+<div class="wrap" id="reverse" style="padding-top:0">
+  <p class="section-label">Work backwards</p>
+  <h2 class="section-title">“I want &#8377;1 lakh a month in hand.” What CTC do I ask for?</h2>
+  <p class="section-sub">Type the monthly in-hand you need. TakeHome works out the CTC that gets you there, using the same structure and tax rules as your calculator above.</p>
+  <div class="rev-grid">
+    <div class="panel">
+      <div class="field">
+        <label for="wantMonthly">Monthly in-hand I want <output id="wantOut">&#8377;1,00,000</output></label>
+        <input type="number" id="wantMonthly" min="10000" max="1000000" step="5000" value="100000" inputmode="numeric">
+        <input type="range" id="wantSlider" min="20000" max="500000" step="5000" value="100000" aria-label="Desired monthly in-hand slider">
+        <p class="sub">Fixed monthly pay, before variable bonus. Assumes the same Basic / HRA / variable split as your calculator.</p>
+      </div>
+      <button class="btn btn-gold" type="button" id="revBtn">Find my CTC</button>
+      <p class="sub" style="margin-top:12px">Tip: when negotiating, quote the CTC from here — and ask how much of it is fixed vs variable.</p>
+    </div>
+    <div class="rev-result">
+      <span>CTC you need to ask for</span>
+      <b id="needCtc">&#8377;—</b>
+      <p id="needNote">Press “Find my CTC” to work it out from your target.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="guide" style="padding-top:0">
+  <p class="section-label">Plain-language guide</p>
+  <h2 class="section-title">How your CTC actually works</h2>
+  <p class="section-sub">Five minutes here saves you from a nasty surprise on your first payslip.</p>
+  <div class="guide-grid">
+    <div class="card">
+      <h3>New-regime slabs — FY 2025&ndash;26</h3>
+      <p class="hint">These are the rates TakeHome uses. Standard deduction &#8377;75,000 for salaried people; 4% cess on the tax; Section 87A rebate wipes tax out up to &#8377;12 lakh taxable income.</p>
+      <table class="slab-table">
+        <thead><tr><th>Taxable income</th><th>Rate</th></tr></thead>
+        <tbody>
+          <tr><td>Up to &#8377;4,00,000</td><td>Nil</td></tr>
+          <tr><td>&#8377;4,00,001 – &#8377;8,00,000</td><td>5%</td></tr>
+          <tr><td>&#8377;8,00,001 – &#8377;12,00,000</td><td>10%</td></tr>
+          <tr><td>&#8377;12,00,001 – &#8377;16,00,000</td><td>15%</td></tr>
+          <tr><td>&#8377;16,00,001 – &#8377;20,00,000</td><td>20%</td></tr>
+          <tr><td>&#8377;20,00,001 – &#8377;24,00,000</td><td>25%</td></tr>
+          <tr><td>Above &#8377;24,00,000</td><td>30%</td></tr>
+        </tbody>
+      </table>
+      <p class="hint" style="margin-top:12px">Old regime (for comparison): up to &#8377;2.5 lakh nil, &#8377;2.5–5 lakh 5%, &#8377;5–10 lakh 20%, above &#8377;10 lakh 30% — plus HRA, 80C, 80D and home-loan deductions, &#8377;50,000 standard deduction.</p>
+    </div>
+    <div class="card">
+      <h3>Five things to check before you sign</h3>
+      <div class="tip"><span class="n">1</span><div><b>Fixed vs variable</b><p>A big variable slice looks great in the headline but may arrive once a year — or not at all. Compare fixed monthly pay, not CTC.</p></div></div>
+      <div class="tip"><span class="n">2</span><div><b>Basic pay is not a detail</b><p>Higher Basic means higher EPF and gratuity — less in hand now, more saved. Lower Basic means more cash today.</p></div></div>
+      <div class="tip"><span class="n">3</span><div><b>Employer PF &amp; gratuity are not salary</b><p>They sit inside your CTC but never reach your bank account. Roughly 17% of Basic never becomes take-home.</p></div></div>
+      <div class="tip"><span class="n">4</span><div><b>The &#8377;12.75 lakh sweet spot</b><p>Under the new regime, a salary up to &#8377;12.75 lakh pays zero income tax. Just above it, marginal relief softens the first step up.</p></div></div>
+      <div class="tip"><span class="n">5</span><div><b>Old regime only wins with big deductions</b><p>It usually needs serious HRA + 80C + 80D + home-loan interest to beat the new regime. Check the comparison above before choosing.</p></div></div>
+    </div>
+  </div>
+
+  <div class="band">
+    <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1400&q=70" alt="Planning a career move with a laptop and notebook" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%221400%22 height=%22600%22><rect width=%221400%22 height=%22600%22 fill=%22%23b7791f%22/></svg>'" loading="lazy">
+    <div class="in">
+      <h3>Negotiate on in-hand, not on CTC.</h3>
+      <p>Two offers with the same CTC can differ by &#8377;10,000 a month once tax, PF and variable pay are counted. Run both through the vault above — then ask for the one that pays more, not the one that sounds bigger.</p>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer>
+  <p><b>TakeHome</b> — a calculator, not a tax advisor. Figures use FY 2025&ndash;26 slabs (Budget 2025) and standard assumptions: EPF 12% of Basic, gratuity 4.81% of Basic, 4% cess, surcharge above &#8377;50 lakh. Your real payslip may differ — check it against your offer letter and, for big decisions, a CA.</p>
+  <p style="margin-top:8px">Built as a single file &middot; No accounts, no tracking &middot; Your numbers never leave this device.</p>
+</footer>
+
+<!-- Onboarding coach -->
+<div id="coach" role="dialog" aria-modal="true" aria-label="Quick tour">
+  <div class="coach-card">
+    <p class="step" id="coachStep">Step 1 of 3</p>
+    <h3 id="coachTitle">Type your CTC</h3>
+    <p id="coachText">Start with the headline number from your offer letter. The sliders for Basic, HRA and variable pay already match a typical Indian IT offer — change them if your letter says otherwise.</p>
+    <div class="coach-dots"><i class="on"></i><i></i><i></i></div>
+    <div class="coach-btns">
+      <button class="btn btn-ghost" type="button" id="coachSkip">Skip tour</button>
+      <button class="btn btn-gold" type="button" id="coachNext">Next</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+/* ============ helpers ============ */
+var $ = function(id){ return document.getElementById(id); };
+function inr(n){ n = Math.round(n); return "\u20B9" + n.toLocaleString("en-IN"); }
+function clamp(v, lo, hi){ v = Number(v); if(isNaN(v)) v = lo; return Math.min(hi, Math.max(lo, v)); }
+function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 2600); }
+function store(k, v){ try{ localStorage.setItem("takehome:" + k, JSON.stringify(v)); }catch(e){} }
+function read(k, d){ try{ var v = localStorage.getItem("takehome:" + k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }
+
+/* ============ tax engine (FY 2025-26) ============ */
+var NEW_SLABS = [[400000,0],[800000,0.05],[1200000,0.10],[1600000,0.15],[2000000,0.20],[2400000,0.25],[Infinity,0.30]];
+var OLD_SLABS = [[250000,0],[500000,0.05],[1000000,0.20],[Infinity,0.30]];
+function slabTax(income, slabs){
+  var tax = 0, prev = 0;
+  for(var i = 0; i < slabs.length; i++){
+    var cap = slabs[i][0], rate = slabs[i][1];
+    if(income <= prev) break;
+    tax += (Math.min(income, cap) - prev) * rate;
+    prev = cap;
+  }
+  return tax;
+}
+function surcharge(taxable, tax, isNew){
+  if(taxable <= 5000000) return 0;
+  var rate = taxable <= 10000000 ? 0.10 : taxable <= 20000000 ? 0.15 : isNew ? 0.25 : taxable <= 50000000 ? 0.25 : 0.37;
+  return tax * rate;
+}
+function taxNew(taxable){
+  if(taxable <= 0) return 0;
+  if(taxable <= 1200000) return 0; /* 87A rebate */
+  var t = slabTax(taxable, NEW_SLABS);
+  t = Math.min(t, taxable - 1200000); /* marginal relief */
+  t += surcharge(taxable, t, true);
+  return Math.round(t * 1.04); /* 4% cess */
+}
+function taxOld(taxable){
+  if(taxable <= 0) return 0;
+  var t = slabTax(taxable, OLD_SLABS);
+  if(taxable <= 500000) t = Math.max(0, t - 12500); /* 87A rebate, max 12,500 */
+  t += surcharge(taxable, t, false);
+  return Math.round(t * 1.04);
+}
+
+/* ============ CTC model ============ */
+function compute(ctc, opts){
+  opts = opts || {};
+  var basicPct = opts.basicPct != null ? opts.basicPct : state.basicPct;
+  var hraPct   = opts.hraPct   != null ? opts.hraPct   : state.hraPct;
+  var varPct   = opts.varPct   != null ? opts.varPct   : state.varPct;
+  var metro    = opts.metro    != null ? opts.metro    : state.metro;
+  var rent     = opts.rent     != null ? opts.rent     : state.rent;
+  var c80      = opts.c80      != null ? opts.c80      : state.c80;
+  var c80d     = opts.c80d     != null ? opts.c80d     : state.c80d;
+  var homeLoan = opts.homeLoan != null ? opts.homeLoan : state.homeLoan;
+  var pt       = opts.pt       != null ? opts.pt       : state.pt;
+
+  var basic = ctc * basicPct / 100;
+  var hra = basic * hraPct / 100;
+  var variable = ctc * varPct / 100;
+  var empPF = basic * 0.12;
+  var gratuity = basic * 0.0481;
+  var fixed = ctc - variable - empPF - gratuity;
+  var special = Math.max(0, fixed - basic - hra);
+  var gross = fixed + variable; /* taxable salary before deductions */
+  var epf = basic * 0.12;
+  var ptAnnual = pt * 12;
+
+  var taxableNew = Math.max(0, gross - 75000);
+  var taxN = taxNew(taxableNew);
+
+  var hraExempt = Math.min(hra, Math.max(0, rent * 12 - basic * 0.10), basic * (metro ? 0.50 : 0.40));
+  var taxableOld = Math.max(0, gross - hraExempt - 50000 - Math.min(150000, c80) - Math.min(100000, c80d) - Math.min(200000, homeLoan));
+  var taxO = taxOld(taxableOld);
+
+  var tax = taxN; /* new regime is the default shown on the payslip */
+  var annualInhand = ctc - empPF - gratuity - epf - ptAnnual - tax;
+  var monthlyInhand = (fixed - epf - ptAnnual - tax) / 12;
+  return {
+    ctc: ctc, basic: basic, hra: hra, special: special, variable: variable,
+    fixed: fixed, gross: gross, empPF: empPF, gratuity: gratuity, epf: epf,
+    ptAnnual: ptAnnual, taxNew: taxN, taxOld: taxO, taxableNew: taxableNew,
+    taxableOld: taxableOld, hraExempt: hraExempt, annualInhand: annualInhand,
+    monthlyInhand: monthlyInhand
+  };
+}
+function ctcForMonthly(target){
+  var lo = target * 12, hi = target * 12 * 2.2, mid, r;
+  for(var i = 0; i < 60; i++){
+    mid = (lo + hi) / 2;
+    r = compute(mid);
+    if(r.monthlyInhand < target) lo = mid; else hi = mid;
+  }
+  return Math.round((lo + hi) / 2 / 1000) * 1000;
+}
+
+/* ============ state ============ */
+var DEFAULTS = { ctc: 1200000, basicPct: 40, hraPct: 50, varPct: 10, metro: true, rent: 15000, c80: 150000, c80d: 25000, homeLoan: 0, pt: 200 };
+var state = {};
+Object.keys(DEFAULTS).forEach(function(k){ state[k] = read("state:" + k, DEFAULTS[k]); });
+var offers = read("offers", []);
+
+/* ============ render ============ */
+var DONUT_COLORS = ["#b7791f","#c05b2e","#3f7a4e","#8a7663","#d9a441","#5c4a38"];
+function render(){
+  var r = compute(state.ctc);
+  $("ctcOut").textContent = inr(state.ctc);
+  $("basicOut").textContent = state.basicPct + "% of CTC";
+  $("hraOut").textContent = state.hraPct + "% of Basic";
+  $("varOut").textContent = state.varPct + "% of CTC";
+  $("rentOut").textContent = inr(state.rent);
+  $("monthlyInhand").textContent = inr(r.monthlyInhand);
+  $("annualInhand").textContent = inr(r.annualInhand);
+  $("monthlyNote").textContent = "Fixed monthly pay" + (r.variable > 0 ? " — plus " + inr(r.variable) + " variable across the year" : " — no variable pay in this offer");
+  var keep = Math.round(r.annualInhand / r.ctc * 100);
+  $("keepLine").innerHTML = "You keep <b>" + inr(r.annualInhand) + " of every " + inr(r.ctc) + " CTC — that is " + keep + " rupees of every 100.</b> The rest goes to tax, PF, gratuity and professional tax.";
+  $("earnRows").innerHTML =
+    row("Basic pay", r.basic / 12) + row("House Rent Allowance", r.hra / 12) +
+    row("Special allowance", r.special / 12) +
+    row("Variable pay <span class='note'>(when paid, " + inr(r.variable) + " / year)</span>", r.variable / 12, true) +
+    totalRow("Gross monthly (incl. variable)", r.gross / 12);
+  $("dedRows").innerHTML =
+    row("Employee PF — 12% of Basic", r.epf / 12) +
+    row("Professional tax", r.ptAnnual / 12) +
+    row("Income tax — new regime", r.taxNew / 12) +
+    totalRow("Total deductions", (r.epf + r.ptAnnual + r.taxNew) / 12) +
+    netRow("Net monthly in-hand", r.monthlyInhand);
+  renderDonut(r);
+  renderRegime(r);
+  renderOffers();
+  Object.keys(state).forEach(function(k){ store("state:" + k, state[k]); });
+  store("offers", offers);
+  function row(label, monthly, muted){
+    return "<tr><td>" + label + "</td><td>" + inr(monthly) + "</td></tr>";
+  }
+  function totalRow(label, monthly){
+    return "<tr class='total'><td>" + label + "</td><td>" + inr(monthly) + "</td></tr>";
+  }
+  function netRow(label, monthly){
+    return "<tr class='net'><td>" + label + "</td><td>" + inr(monthly) + "</td></tr>";
+  }
+}
+function renderDonut(r){
+  var parts = [
+    { label: "In your hand", val: r.annualInhand, color: DONUT_COLORS[0] },
+    { label: "Income tax", val: r.taxNew, color: DONUT_COLORS[1] },
+    { label: "Your EPF", val: r.epf, color: DONUT_COLORS[2] },
+    { label: "Employer PF", val: r.empPF, color: DONUT_COLORS[3] },
+    { label: "Gratuity", val: r.gratuity, color: DONUT_COLORS[4] },
+    { label: "Prof. tax", val: r.ptAnnual, color: DONUT_COLORS[5] }
+  ];
+  var total = r.ctc, cx = 85, cy = 85, rad = 62, circ = 2 * Math.PI * rad, off = 0;
+  var svg = "<circle cx='" + cx + "' cy='" + cy + "' r='" + rad + "' fill='none' stroke='#f0e7d6' stroke-width='26'/>";
+  parts.forEach(function(p){
+    if(p.val <= 0) return;
+    var len = p.val / total * circ;
+    svg += "<circle cx='" + cx + "' cy='" + cy + "' r='" + rad + "' fill='none' stroke='" + p.color + "' stroke-width='26' stroke-dasharray='" + Math.max(0, len - 2) + " " + (circ - Math.max(0, len - 2)) + "' stroke-dashoffset='" + (-off) + "' transform='rotate(-90 " + cx + " " + cy + ")'/>";
+    off += len;
+  });
+  svg += "<text x='" + cx + "' y='" + (cy - 4) + "' text-anchor='middle' font-family='Fraunces,serif' font-size='21' font-weight='700' fill='#241a12'>" + Math.round(r.annualInhand / total * 100) + "%</text>";
+  svg += "<text x='" + cx + "' y='" + (cy + 16) + "' text-anchor='middle' font-size='10.5' fill='#8a7663'>reaches you</text>";
+  $("donut").innerHTML = svg;
+  $("donutLegend").innerHTML = parts.map(function(p){
+    return "<div class='li'><span class='sw' style='background:" + p.color + "'></span>" + p.label + "<b>" + inr(p.val) + "</b></div>";
+  }).join("");
+}
+function renderRegime(r){
+  $("newTax").textContent = inr(r.taxNew);
+  $("oldTax").textContent = inr(r.taxOld);
+  $("newNote").textContent = "Tax per year · taxable " + inr(r.taxableNew);
+  $("oldNote").textContent = "Tax per year · taxable " + inr(r.taxableOld) + (r.hraExempt > 0 ? " · HRA exempt " + inr(r.hraExempt) : "");
+  var winNew = r.taxNew <= r.taxOld;
+  $("regNew").classList.toggle("win", winNew);
+  $("regOld").classList.toggle("win", !winNew);
+  $("newSave").textContent = winNew && r.taxOld > r.taxNew ? "Saves " + inr(r.taxOld - r.taxNew) + " a year" : "";
+  $("oldSave").textContent = !winNew ? "Saves " + inr(r.taxNew - r.taxOld) + " a year" : "";
+  $("verdict").innerHTML = winNew
+    ? "<b>New regime wins</b> for this salary — by " + inr(Math.max(0, r.taxOld - r.taxNew)) + " a year. " + (r.taxNew === 0 ? "You pay zero income tax at this level." : "The old regime's deductions are not enough to beat the lower slabs.")
+    : "<b>Old regime wins</b> for this salary — by " + inr(r.taxNew - r.taxOld) + " a year, thanks to your HRA and deductions. If you switch jobs, re-check: it only wins while those deductions stay large.";
+}
+function renderOffers(){
+  var grid = $("offerGrid");
+  var existing = grid.querySelectorAll(".offer");
+  existing.forEach(function(el){ el.remove(); });
+  var empty = $("offerEmpty");
+  if(!offers.length){ empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  var results = offers.map(function(o){ return { o: o, r: compute(o.ctc, { varPct: o.varPct }) }; });
+  var best = results.reduce(function(a, b){ return b.r.monthlyInhand > a.r.monthlyInhand ? b : a; });
+  results.forEach(function(item){
+    var o = item.o, r = item.r;
+    var div = document.createElement("div");
+    div.className = "offer" + (item === best && results.length > 1 ? " best" : "");
+    div.innerHTML =
+      (item === best && results.length > 1 ? "<span class='best-tag'>Best in-hand</span>" : "") +
+      "<button class='del' type='button' aria-label='Remove offer'>&times;</button>" +
+      "<h4></h4><p class='meta'>CTC " + inr(o.ctc) + " &middot; variable " + o.varPct + "% &middot; saved " + o.date + "</p>" +
+      "<div class='row'><span>Monthly in-hand</span><b>" + inr(r.monthlyInhand) + "</b></div>" +
+      "<div class='row'><span>Annual in-hand</span><b>" + inr(r.annualInhand) + "</b></div>" +
+      "<div class='row'><span>Income tax / year</span><b>" + inr(r.taxNew) + "</b></div>" +
+      "<div class='row net'><span>Fixed pay / month</span><b>" + inr(r.fixed / 12) + "</b></div>";
+    div.querySelector("h4").textContent = o.name;
+    div.querySelector(".del").addEventListener("click", function(){
+      offers = offers.filter(function(x){ return x !== o; });
+      render(); toast("Offer removed.");
+    });
+    grid.appendChild(div);
+  });
+}
+
+/* ============ wiring ============ */
+function syncInputs(){
+  $("ctcInput").value = state.ctc;
+  $("ctcSlider").value = Math.min(5000000, state.ctc);
+  $("basicPct").value = state.basicPct;
+  $("hraPct").value = state.hraPct;
+  $("varPct").value = state.varPct;
+  $("rentInput").value = state.rent;
+  $("c80").value = state.c80;
+  $("c80d").value = state.c80d;
+  $("homeLoan").value = state.homeLoan;
+  $("ptInput").value = state.pt;
+  document.querySelectorAll("#citySeg button").forEach(function(b){
+    b.classList.toggle("on", (b.dataset.city === "metro") === state.metro);
+  });
+  document.querySelectorAll("#ctcPresets .preset").forEach(function(b){
+    b.classList.toggle("on", Number(b.dataset.ctc) === state.ctc);
+  });
+}
+$("ctcInput").addEventListener("input", function(){ state.ctc = clamp(this.value, 100000, 100000000); render(); syncInputs(); });
+$("ctcSlider").addEventListener("input", function(){ state.ctc = clamp(this.value, 100000, 5000000); render(); syncInputs(); });
+$("basicPct").addEventListener("input", function(){ state.basicPct = clamp(this.value, 30, 60); render(); });
+$("hraPct").addEventListener("input", function(){ state.hraPct = clamp(this.value, 0, 60); render(); });
+$("varPct").addEventListener("input", function(){ state.varPct = clamp(this.value, 0, 40); render(); });
+$("rentInput").addEventListener("input", function(){ state.rent = clamp(this.value, 0, 100000); render(); });
+$("c80").addEventListener("change", function(){ state.c80 = clamp(this.value, 0, 150000); render(); });
+$("c80d").addEventListener("change", function(){ state.c80d = clamp(this.value, 0, 100000); render(); });
+$("homeLoan").addEventListener("change", function(){ state.homeLoan = clamp(this.value, 0, 200000); render(); });
+$("ptInput").addEventListener("change", function(){ state.pt = clamp(this.value, 0, 500); render(); });
+document.querySelectorAll("#ctcPresets .preset").forEach(function(b){
+  b.addEventListener("click", function(){ state.ctc = Number(b.dataset.ctc); render(); syncInputs(); });
+});
+document.querySelectorAll("#citySeg button").forEach(function(b){
+  b.addEventListener("click", function(){ state.metro = b.dataset.city === "metro"; render(); syncInputs(); });
+});
+$("resetBtn").addEventListener("click", function(){
+  Object.keys(DEFAULTS).forEach(function(k){ state[k] = DEFAULTS[k]; });
+  render(); syncInputs(); toast("Reset to typical offer defaults.");
+});
+
+/* offers */
+function addOffer(name, ctc, varPct){
+  name = (name || "").trim() || ("Offer " + (offers.length + 1));
+  ctc = clamp(ctc, 100000, 100000000);
+  varPct = clamp(varPct, 0, 40);
+  if(offers.length >= 3){ toast("Vault holds 3 offers — remove one first."); return false; }
+  offers.push({ name: name, ctc: ctc, varPct: varPct, date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" }) });
+  render(); toast("Offer saved to the vault.");
+  return true;
+}
+$("addOfferBtn").addEventListener("click", function(){
+  var ctc = Number($("offerCtc").value);
+  if(!ctc || ctc < 100000){ toast("Enter a CTC of at least \u20B91,00,000."); $("offerCtc").focus(); return; }
+  var varRaw = $("offerVar").value;
+  var varPct = varRaw === "" ? 10 : Number(varRaw);
+  if(addOffer($("offerName").value, ctc, varPct)){
+    $("offerName").value = ""; $("offerCtc").value = ""; $("offerVar").value = "";
+  }
+});
+$("saveOfferBtn").addEventListener("click", function(){
+  if(addOffer("CTC " + inr(state.ctc), state.ctc, state.varPct)){
+    document.getElementById("offers").scrollIntoView({ behavior: "smooth" });
+  }
+});
+
+/* reverse calculator */
+function runReverse(){
+  var want = clamp(Number($("wantMonthly").value) || 0, 10000, 1000000);
+  $("wantOut").textContent = inr(want);
+  var need = ctcForMonthly(want);
+  var r = compute(need);
+  $("needCtc").textContent = inr(need) + " / year";
+  $("needNote").innerHTML = "That gives <b>" + inr(r.monthlyInhand) + " / month</b> in hand (" + inr(r.annualInhand) + " a year), with " + inr(r.taxNew) + " income tax. Ask for the fixed part in writing — variable pay is not guaranteed.";
+}
+$("wantMonthly").addEventListener("input", function(){ $("wantSlider").value = clamp(this.value, 20000, 500000); });
+$("wantSlider").addEventListener("input", function(){ $("wantMonthly").value = this.value; $("wantOut").textContent = inr(Number(this.value)); });
+$("revBtn").addEventListener("click", runReverse);
+
+/* copy summary */
+$("copyBtn").addEventListener("click", function(){
+  var r = compute(state.ctc);
+  var text = "TakeHome — CTC " + inr(state.ctc) + " (FY 2025-26, new regime)\n" +
+    "Monthly in-hand: " + inr(r.monthlyInhand) + "\nAnnual in-hand: " + inr(r.annualInhand) + "\n" +
+    "Basic " + inr(r.basic) + " · HRA " + inr(r.hra) + " · Special " + inr(r.special) + " · Variable " + inr(r.variable) + "\n" +
+    "Income tax: " + inr(r.taxNew) + "/yr · EPF: " + inr(r.epf) + "/yr · Old-regime tax would be " + inr(r.taxOld) + "/yr";
+  function done(){ toast("Summary copied — paste it anywhere."); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+  } else fallback();
+  function fallback(){
+    var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand("copy"); done(); }catch(e){ toast("Copy failed — select the numbers manually."); }
+    document.body.removeChild(ta);
+  }
+});
+
+/* ============ intro + coach ============ */
+var seen = read("seen", false);
+var intro = $("intro");
+var introClosed = false;
+function closeIntro(){
+  if(introClosed) return;
+  introClosed = true;
+  intro.classList.add("done");
+  if(!seen){ store("seen", true); setTimeout(showCoach, 500); }
+}
+$("skipIntro").addEventListener("click", closeIntro);
+intro.addEventListener("click", function(e){ if(e.target === intro) closeIntro(); });
+setTimeout(function(){ if(!intro.classList.contains("done")) closeIntro(); }, seen ? 1400 : 3800);
+if(seen){ intro.style.display = "none"; }
+
+var steps = [
+  { t: "Type your CTC", x: "Start with the headline number from your offer letter. The sliders for Basic, HRA and variable pay already match a typical Indian IT offer — change them if your letter says otherwise." },
+  { t: "Read your payslip", x: "The payslip on the right is the truth: monthly in-hand, every deduction, and where each rupee of CTC goes. The donut shows what never reaches your bank." },
+  { t: "Compare before you sign", x: "Save up to 3 offers in the vault and let the in-hand number pick the winner. Or work backwards: type the monthly pay you want and find the CTC to ask for." }
+];
+var stepIdx = 0;
+function showCoach(){
+  stepIdx = 0; paintCoach(); $("coach").classList.add("show");
+}
+function paintCoach(){
+  $("coachStep").textContent = "Step " + (stepIdx + 1) + " of 3";
+  $("coachTitle").textContent = steps[stepIdx].t;
+  $("coachText").textContent = steps[stepIdx].x;
+  document.querySelectorAll(".coach-dots i").forEach(function(d, i){ d.classList.toggle("on", i <= stepIdx); });
+  $("coachNext").textContent = stepIdx === 2 ? "Start calculating" : "Next";
+}
+$("coachNext").addEventListener("click", function(){
+  if(stepIdx < 2){ stepIdx++; paintCoach(); } else { $("coach").classList.remove("show"); }
+});
+$("coachSkip").addEventListener("click", function(){ $("coach").classList.remove("show"); });
+
+/* ============ boot ============ */
+syncInputs();
+render();
+})();
+</script>
+</body>
+</html>
